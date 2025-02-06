@@ -12,6 +12,7 @@ async def create_response(message) -> str:
             {"role": "user", "content": message}])
     
     res: str = (response.choices[0].message.content)
-    
-    return  res
+
+    return res
+
 

@@ -94,6 +94,7 @@ async def create_answer_by_gpt(message: Message, state: FSMContext, bot: Bot) ->
     answer = await create_response(state_message)
     await sent_message.edit_text(answer, reply_markup=BACK_MAIN_MENU)
     await state.clear()
+    await state.set_state(For_got_data.message_for_gpt)
         
 @router.callback_query(F.data == "main_menu")
 async def answer_to_main_menu(callback: CallbackQuery, bot: Bot) -> None:
