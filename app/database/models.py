@@ -4,6 +4,7 @@ from typing import Annotated, Optional
 
 from sqlalchemy import (
     TIMESTAMP,
+    DateTime,
     CheckConstraint,
     Column,
     Enum,
@@ -29,6 +30,8 @@ class Users(Base):
     )
     admin: Mapped[int]
     alive: Mapped[int]
-    unlimit_questions: Mapped[int] 
+    unlimit: Mapped[int] 
+    count_generate: Mapped[int]
+    datetime_of_first_generate: Mapped[DateTime] = mapped_column(DateTime, nullable=True)
     
     

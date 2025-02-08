@@ -19,3 +19,15 @@ async def create_response(history: dict) -> str:
     return res, history
 
 
+async def generate_image(message):
+    client = AsyncClient(provider=g4f.Provider.Gemini)
+    response = await client.images.generate(
+        model="dall-e-3",
+        prompt=f"ПОЖАЛУЙСТА, ВОСПРИНИМАЙ ЗАПРОС ПЕРЕВОДЯ ЕГО НА РУССКИЙ! Сгенерируй мне {message}",
+        response_format="url",
+        size="1024x1024"
+    )
+    
+    
+    return response.data[0].url
+
