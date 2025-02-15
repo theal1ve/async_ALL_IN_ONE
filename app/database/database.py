@@ -1,7 +1,3 @@
-import asyncio
-from typing import Annotated
-
-from sqlalchemy import String
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 

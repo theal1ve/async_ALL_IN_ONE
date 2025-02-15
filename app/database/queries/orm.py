@@ -1,5 +1,4 @@
-from sqlalchemy import Integer, and_, cast, func, insert, inspect, or_, select, text, update, values
-from sqlalchemy.orm import aliased, contains_eager, joinedload, selectinload
+from sqlalchemy import select, update
 from datetime import datetime, timedelta
 from app.database.database import Base, async_engine, async_session_factory
 from app.database.models import Users
@@ -11,13 +10,15 @@ async def create_tables():
         await conn.run_sync(Base.metadata.create_all)
 
 
-async def create_user(id: int, alive: int = 1, unlimit: int = 0, admin: int = 0, 
-                      count_of_generate: int = 0) -> None:
+async def create_user(id: int, alive: int = 1, unlimit: int = 0, admin: int = 0,
+                      count_of_generate: int = 0, model_for_chat: str = "deepseek-v3", model_for_image: str = "flux",
+                      promt_for_chat: str="") -> None:
     async with async_session_factory() as session:
         query = (select(Users.id).filter_by(id=id).exists())
         check_user = await session.scalar(select(query))
         if not check_user:
-            user = Users(id=id, alive=alive, unlimit=unlimit, admin=admin, count_generate=count_of_generate)
+            user = Users(id=id, alive=alive, unlimit=unlimit, admin=admin, count_generate=count_of_generate,
+                         model_for_chat=model_for_chat, model_for_image=model_for_image, promt_for_chat=promt_for_chat)
             session.add(user)
             await session.flush()
             await session.commit()
@@ -28,7 +29,8 @@ async def update_user(id: int, dict_wtih_values: dict) -> None:
         query = update(Users).where(Users.id == id).values(**dict_wtih_values)
         if not (await checking_for_unlimit(id=id)):
             if "count_generate" in dict_wtih_values.keys():
-                query = update(Users).where(Users.id == id).values(count_generate=Users.count_generate + dict_wtih_values["count_generate"] + 1)
+                query = update(Users).where(Users.id == id).values(
+                    count_generate=Users.count_generate + dict_wtih_values["count_generate"] + 1)
         await session.execute(query)
         await session.flush()
         await session.commit()
@@ -57,7 +59,7 @@ async def checking_for_unlimit(id: int) -> int:
         return unlimit
 
 
-async def cheking_for_count_generate(id: int) -> int:
+async def checking_for_count_generate(id: int) -> int:
     async with async_session_factory() as session:
         query = select(Users.count_generate,
                        Users.datetime_of_first_generate).where(Users.id == id)
@@ -65,7 +67,24 @@ async def cheking_for_count_generate(id: int) -> int:
         return count_generate
 
 
-async def get_datetime_of_first_generate(id: int):
+async def checking_for_model_for_chat_or_image(id: int, for_chat_or_image: str) -> str:
+    async with async_session_factory() as session:
+        if for_chat_or_image == "chat":
+            query = select(Users.model_for_chat).where(Users.id == id)
+        else:
+            query = select(Users.model_for_image).where(Users.id == id)
+        model = (await session.execute(query)).one()[0]
+        return model
+
+
+async def checking_for_promt_for_chat(id: int) -> str:
+    async with async_session_factory() as session:
+        query = select(Users.promt_for_chat).where(Users.id == id)
+        promt = (await session.execute(query)).one()[0]
+        return promt
+
+
+async def get_datetime_of_first_generate(id: int) -> timedelta:
     async with async_session_factory() as session:
         query = select(Users.datetime_of_first_generate).where(Users.id == id)
         get_datetime_of_first_generate: datetime = (await session.execute(query)).one()[0] + timedelta(days=1)

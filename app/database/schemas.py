@@ -1,9 +1,5 @@
 from datetime import datetime
-from typing import Optional
-
 from pydantic import BaseModel
-
-
 
 
 class Users(BaseModel):
@@ -13,3 +9,6 @@ class Users(BaseModel):
     unlimit: int
     count_generate: int
     datetime_of_first_generate: datetime
+    model_for_chat: str
+    model_for_image: str
+    promt_for_chat: str
