@@ -21,9 +21,11 @@ CHANNELS_URL = ["https://t.me/thealivelive"]
 
 
 async def is_subscribed(user_id: int, bot: Bot, message_id: int = False) -> None:
+    if await checking_for_unlimit(id=user_id) == 2:
+        return None
     for id in CHANNELS_ID:
         member = await bot.get_chat_member(chat_id=id, user_id=user_id)
-        if member.status in ["member", "administrator", "creator"] or await checking_for_unlimit(id=user_id) == 2 or await checking_for_admin(id=user_id):
+        if member.status in ["member", "administrator", "creator"] or await checking_for_admin(id=user_id):
             if message_id:
                 await bot.edit_message_text(chat_id=user_id, message_id=message_id, text="Спасибо за подписки! \"Безлимит\" активирован", reply_markup=None)
             await update_user(id=user_id, dict_wtih_values={"unlimit": 1})
@@ -62,6 +64,7 @@ async def bot_blocked_by_user(event: ChatMemberUpdated, bot: Bot) -> None:
 async def cmd_start(message: Message, bot: Bot) -> None:
     await create_user(id=message.from_user.id)
     await create_commands_menu(id=message.from_user.id, bot=bot)
+    await update_user(id=message.from_user.id, dict_wtih_values={"alive": 1})
     if await checking_for_admin(message.from_user.id):
         await message.answer(answer_to_cmd_start_for_admin.format(message.from_user.first_name), parse_mode="html")
     else:

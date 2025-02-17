@@ -1,26 +1,16 @@
 from aiogram import BaseMiddleware
-from aiogram.types import Message, TelegramObject
-from aiogram.exceptions import TelegramForbiddenError
-from typing import Callable, Awaitable, Any
+from aiogram.exceptions import TelegramAPIError
 from app.database.queries.orm import update_user
+from aiogram.types import Update
+
 
 class BlockCheckMiddleware(BaseMiddleware):
-    async def __call__(
-        self,
-        handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
-        event: TelegramObject,
-        data: dict[str, Any]
-    ) -> Any:
-        if not isinstance(event, Message):
-            return await handler(event, data)
-
-        bot = data["bot"]
-        user_id = event.from_user.id
-
+    async def __call__(self, handler, event: Update, data: dict):
         try:
-            await bot.get_chat(user_id)
-            return await handler(event, data)  
-        except TelegramForbiddenError:
-            print(f"Пользователь {user_id} заблокировал бота.")
-            await update_user(id=user_id, dict_wtih_values={"alive": 0})
-            return  
+            return await handler(event, data)
+        except TelegramAPIError as e:
+            if "bot was blocked by the user" in str(e).lower():
+                user_id = event.message.from_user.id
+                await update_user(id=user_id, dict_wtih_values={"alive": 0})
+
+
